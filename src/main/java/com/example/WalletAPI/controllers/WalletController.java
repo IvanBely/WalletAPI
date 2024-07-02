@@ -19,7 +19,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class WalletController {
-    private final WalletRepository walletRepository;
     private final WalletService walletService;
 
     @GetMapping("wallets/{WALLET_UUID}")
@@ -31,11 +30,20 @@ public class WalletController {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         }
     }
+    @PostMapping("/")
+    public ResponseEntity<String> crateWallet() {
+        try {
+            walletService.createWallet();
+            return ResponseEntity.status(HttpStatus.CREATED).body("Кошелек успешно создан");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка обработки запроса");
+        }
+    }
     @PostMapping("/wallet")
     public ResponseEntity<String> processTransaction(@RequestBody EditWalletRequest request) {
         try {
             walletService.editWallet(request);
-            return ResponseEntity.ok("Кошелек успешно обновлен");
+            return ResponseEntity.status(HttpStatus.OK).body("Кошелек успешно обновлен");
         } catch (InvalidJsonException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         } catch (WalletNotFoundException e) {
