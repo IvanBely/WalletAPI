@@ -2,26 +2,23 @@ server:
   port: 8080
 
 spring:
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
   datasource:
-    url: jdbc:postgresql://localhost:5432/walletdb
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/walletdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
     hikari:
       maximum-pool-size: 100
       minimum-idle: 10
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 30000
-
   jpa:
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.PostgreSQLDialect}
     hibernate:
-      ddl-auto: update
-    show-sql: true
-
-  sql:
-    init:
-      mode: always
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
 
 logging:
   level:
