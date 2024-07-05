@@ -22,37 +22,19 @@ public class WalletController {
     private final WalletService walletService;
 
     @GetMapping("wallets/{WALLET_UUID}")
-    public ResponseEntity<Object> getWalletBalance(@PathVariable UUID WALLET_UUID) {
-        try {
-            Wallet wallet = walletService.findById(WALLET_UUID);
-            return ResponseEntity.ok(wallet);
-        } catch (WalletNotFoundException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-        }
+    public ResponseEntity<Wallet> getWalletBalance(@PathVariable UUID WALLET_UUID) {
+        Wallet wallet = walletService.findById(WALLET_UUID);
+        return ResponseEntity.ok(wallet);
     }
     @PostMapping("/")
     public ResponseEntity<String> crateWallet() {
-        try {
-            walletService.createWallet();
-            return ResponseEntity.status(HttpStatus.CREATED).body("Кошелек успешно создан");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка обработки запроса");
-        }
+        walletService.createWallet();
+        return ResponseEntity.ok("Кошелек успешно создан");
     }
     @PostMapping("/wallet")
     public ResponseEntity<String> processTransaction(@RequestBody EditWalletRequest request) {
-        try {
-            walletService.editWallet(request);
-            return ResponseEntity.status(HttpStatus.OK).body("Кошелек успешно обновлен");
-        } catch (InvalidJsonException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-        } catch (WalletNotFoundException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-        } catch (InsufficientFundsException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка обработки транзакции");
-        }
+        walletService.editWallet(request);
+        return ResponseEntity.ok("Кошелек успешно обновлен");
     }
 }
 
