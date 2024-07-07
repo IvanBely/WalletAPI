@@ -19,9 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +27,6 @@ public class WalletServiceImpl implements WalletService {
     private WalletRepository walletRepository;
     @Autowired
     private TransactionRepository transactionRepository;
-    private final ConcurrentHashMap<UUID, BlockingQueue<Runnable>> walletQueues = new ConcurrentHashMap<>();
 
     @Override
     @Transactional(readOnly = true)
@@ -42,28 +38,6 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional
     public void editWallet(EditWalletRequest request) throws WalletNotFoundException, InvalidJsonException, InsufficientFundsException {
-        UUID walletId = request.getId();
-        walletQueues.computeIfAbsent(walletId, id -> new LinkedBlockingQueue<>()).add(() -> {
-            try {
-                processEditWallet(request);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        processQueue(walletId);
-    }
-    private void processQueue(UUID walletId) {
-        BlockingQueue<Runnable> queue = walletQueues.get(walletId);
-
-        Runnable task;
-        while ((task = queue.poll()) != null) {
-            task.run();
-        }
-        walletQueues.remove(walletId, queue);
-    }
-
-    private void processEditWallet(EditWalletRequest request) throws WalletNotFoundException, InvalidJsonException, InsufficientFundsException {
         UUID walletId = request.getId();
         OperationType operationType = request.getOperationType();
         double amount = request.getAmount();
@@ -91,10 +65,8 @@ public class WalletServiceImpl implements WalletService {
             wallet.setBalance(wallet.getBalance() - amount);
         }
         walletRepository.save(wallet);
-
         saveTransaction(wallet, operationType.name(), amount);
     }
-
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveTransaction(Wallet wallet, String operationType, double amount) {
